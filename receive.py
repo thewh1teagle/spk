@@ -4,10 +4,6 @@ import time
 import json
 import rsa
 
-# npcap required for window https://nmap.org/download.html
-# net start npcap (windows only)
-
-
 def load_privkey(path):
     with open(path, 'rb') as f:
         keydata = f.read()
