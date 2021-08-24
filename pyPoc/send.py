@@ -24,5 +24,5 @@ if __name__ == '__main__':
     pubkey = load_pubkey('public.pem')
     data = generate_spa('123', pubkey)
     send_knock(data, '1.1.1.1', 1189)
-    time.sleep(3)
-    send_knock(data, '1.1.1.1', 1189)
+    # time.sleep(3)
+    # send_knock(data, '127.0.0.1', 1189)
