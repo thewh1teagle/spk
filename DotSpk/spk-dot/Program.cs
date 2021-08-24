@@ -24,7 +24,7 @@ namespace spk_dot
                 }
 
                 ICaptureDevice interfaceResult;
-                if (opts.InterfaceIdx != null)
+                if (opts.InterfaceIdx != 0)
                 {
                     interfaceResult = DeviceManager.GetInterfaceByIndex(opts.InterfaceIdx - 1); // uman index..
                 }
@@ -32,9 +32,9 @@ namespace spk_dot
                 {
                     interfaceResult = DeviceManager.GetDefaultDevice();
                 }
-            });
 
-            // KnockSrv.start("private.pem");
+                KnockSrv.start(opts.KeyPath, interfaceResult, opts.Secret, opts.Exec, opts.Port, opts.Threshold);
+            });
         }
     }
 }

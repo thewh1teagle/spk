@@ -7,9 +7,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using PacketDotNet;
 using SharpPcap;
-using System;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -24,6 +21,10 @@ namespace spk_dot
     class KnockSrv
     {
         static RSA privateRsa;
+        static string secret;
+        static float threshold;
+        static int port;
+        static string execCommand;
 
         private static bool CorrectKnoc(KnockPacket result, String secret, long threshold)
         {
@@ -37,21 +38,28 @@ namespace spk_dot
             return false;
         }
 
-        private static void Device_OnPacketArrival(object sender, PacketCapture e)
+        private static void OnPacketArrival(object sender, PacketCapture e)
         {
             Console.WriteLine("new packet!");
             // var time = e.Header.Timeval.Date;
-            // var len = e.Data.Length;
-            var destinationPort = e.GetPacket().GetPacket().Extract<UdpPacket>().DestinationPort;
+            int packetSize = e.Data.Length;
+            if (packetSize > 1000) // ignore if packet > 1kb
+            {
+                return;
+            }
+            // var destinationPort = e.GetPacket().GetPacket().Extract<UdpPacket>().DestinationPort;
+
             var rawCapture = e.GetPacket();
             var packet = Packet.ParsePacket(rawCapture.LinkLayerType, rawCapture.Data);
             var data = packet.PayloadPacket.PayloadPacket.PayloadData;
-
             var decrypted = RsaHelper.Decrypt(privateRsa, data);
+
             KnockPacket result = JsonConvert.DeserializeObject<KnockPacket>(decrypted);
-            if (CorrectKnoc(result, "123", (long)0))
+
+            if (CorrectKnoc(result, KnockSrv.secret, (long)0))
             {
                 Console.WriteLine("Correct knock!!");
+                Commander.RunCommand(KnockSrv.execCommand, false);
             }
             else
             {
@@ -59,7 +67,7 @@ namespace spk_dot
             }
         }
 
-        public static void start(string privateKeyPath)
+        public static void start(string privateKeyPath, ICaptureDevice device, string secret, string execCommand, int port, float threshold)
         {
             // RSA pubRsa = RsaHelper.ReadPubKeyFromFile("public.pem");
             // String text = "{\"secret\":\"123\"}";
@@ -67,11 +75,14 @@ namespace spk_dot
             // byte[] enc = RsaHelper.Encrypt(pubRsa, text);
             // String decrypted = RsaHelper.Decrypt(privateRsa, enc);
             // Console.WriteLine($"decrypted: {decrypted}");
-
-            privateRsa = RsaHelper.ReadPrivateKeyFromFile(privateKeyPath);
+            KnockSrv.privateRsa = RsaHelper.ReadPrivateKeyFromFile(privateKeyPath);
+            KnockSrv.threshold = threshold;
+            KnockSrv.secret = secret;
+            KnockSrv.port = port;
+            KnockSrv.execCommand = execCommand;
             Sniffer sniffer = new Sniffer();
-            ICaptureDevice defaultDev = DeviceManager.GetDefaultDevice();
-            sniffer.Sniff(defaultDev, "port 1189", Device_OnPacketArrival);
+            String filterStr = Sniffer.GenerateFilterString(port, "udp");
+            sniffer.Sniff(device, filterStr, OnPacketArrival);
         }
     }
 }

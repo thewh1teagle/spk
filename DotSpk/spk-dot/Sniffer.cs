@@ -12,6 +12,14 @@ namespace spk_dot
     class Sniffer
     {
 
+        public static string GenerateFilterString(int port, string protocol)
+        { // generate Berkley Packet Filters
+
+            String result = $"{protocol} port {port}";
+
+            return result;
+        }
+
         public void Sniff(ICaptureDevice device, string filter, CallBack onPacketCallback)
         {
 

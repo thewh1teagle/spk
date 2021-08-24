@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "spk-dot": {
+      "commandName": "Project",
+      "commandLineArgs": "-p 1189 -e \"start http://google.com\" -t \"0.5\" -k \"private.pem\" -s \"123\""
+    }
+  }
+}
