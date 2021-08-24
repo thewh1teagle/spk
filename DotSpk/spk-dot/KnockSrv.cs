@@ -26,7 +26,7 @@ namespace spk_dot
         static int port;
         static string execCommand;
 
-        private static bool CorrectKnoc(KnockPacket result, String secret, long threshold)
+        private static bool CorrectKnoc(KnockPacket result, String secret, float threshold)
         {
             long knockTimestamp = Convert.ToInt64(result.timestamp);
             String knockSecret = result.secret;
@@ -52,19 +52,24 @@ namespace spk_dot
             var rawCapture = e.GetPacket();
             var packet = Packet.ParsePacket(rawCapture.LinkLayerType, rawCapture.Data);
             var data = packet.PayloadPacket.PayloadPacket.PayloadData;
-            var decrypted = RsaHelper.Decrypt(privateRsa, data);
-
-            KnockPacket result = JsonConvert.DeserializeObject<KnockPacket>(decrypted);
-
-            if (CorrectKnoc(result, KnockSrv.secret, (long)0))
+            try
             {
-                Console.WriteLine("Correct knock!!");
-                Commander.RunCommand(KnockSrv.execCommand, false);
-            }
-            else
+                var decrypted = RsaHelper.Decrypt(privateRsa, data);
+                KnockPacket result = JsonConvert.DeserializeObject<KnockPacket>(decrypted);
+                if (CorrectKnoc(result, KnockSrv.secret, threshold))
+                {
+                    Console.WriteLine("Correct knock!!");
+                    Commander.RunCommand(KnockSrv.execCommand, false);
+                }
+                else
+                {
+                    Console.WriteLine("not Correct knock :(");
+                }
+            } catch
             {
-                Console.WriteLine("not Correct knock :(");
-            }
+                Console.WriteLine("Wrong private key");
+                return;
+            }            
         }
 
         public static void start(string privateKeyPath, ICaptureDevice device, string secret, string execCommand, int port, float threshold)
