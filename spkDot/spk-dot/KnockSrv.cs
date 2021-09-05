@@ -9,6 +9,7 @@ using PacketDotNet;
 using SharpPcap;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Net;
 
 namespace spk_dot
 {
@@ -52,6 +53,7 @@ namespace spk_dot
             var rawCapture = e.GetPacket();
             var packet = Packet.ParsePacket(rawCapture.LinkLayerType, rawCapture.Data);
             var data = packet.PayloadPacket.PayloadPacket.PayloadData;
+            String sourceIp = packet.PayloadPacket.Extract<IPv4Packet>().SourceAddress.ToString();
             try
             {
                 var decrypted = RsaHelper.Decrypt(privateRsa, data);
@@ -59,7 +61,7 @@ namespace spk_dot
                 if (CorrectKnoc(result, KnockSrv.secret, threshold))
                 {
                     Console.WriteLine("Correct knock!!");
-                    Commander.RunCommand(KnockSrv.execCommand, false);
+                    Commander.RunCommand($"{KnockSrv.execCommand} {sourceIp}", false);
                 }
                 else
                 {
