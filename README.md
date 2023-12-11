@@ -2,31 +2,13 @@
 Single packet authorization port knocking
 
 ## The story behind this program
-I wanted to be able to connect  
-securly to my PC in my Office. 
-But, Instead of keeping RDP open to the internet always,  
-I wanted to use additional secure 'knock' that will open the 'door'  
-and let me connect, and of course, after I got in, the door should closed.  
+I wanted a secure way to connect to my office PC without leaving RDP open to the internet all the time. Instead, I implemented an additional secure 'knock' to open the 'door' for connection, closing it once accessed.
 
-Solution:
-I configured windows firewall to allow incoming connection  
-to RDP port only from certain address,  
-that adress changed to the adress that the knock come from.
+Here's the solution: I configured the Windows firewall to allow incoming connections to the RDP port only from a specific address, dynamically changing the address based on the incoming 'knock.'
 
-The program listen for incoming raw packets  
-on specific port, 'quietly' - port scan will not detect it.  
-if the packet is smaller than 1kb,  
-I try to decrypt it with pre configured rsa key.  
-if the decrypt worked, I check if the timestamp in the packet  
-in the configured thresold (to prevent replay attacks),  
-if it does, it checks if the secret (string) is correct.  
-if all above conditions accepted,   
-it executes shell command with   
-one argument - the source ip of the knock.  
-In my case, it executes batch script that  
-configure windows firewall to allow   
-incoming connection to rdp only  
-from the ip the knock come from.  
+The program listens for incoming raw packets on a specific port discreetly, making it undetectable by port scans. If the packet is smaller than 1kb, I attempt to decrypt it using a pre-configured RSA key. If decryption is successful, I check the timestamp against a configured threshold to prevent replay attacks. If all conditions are met, including the correct secret (string), the program executes a shell command with the source IP of the knock.
+
+In my case, it runs a batch script to configure the Windows firewall, allowing incoming RDP connections only from the IP of the knock.
 
 ## My use case
 ##### Wake up PC remotely
